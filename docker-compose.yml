@@ -1,0 +1,58 @@
+name: terraforming-mars-mcp
+
+services:
+  tm:
+    container_name: terraforming-mars
+    build:
+      context: "${TM_BUILD_CONTEXT:-https://github.com/terraforming-mars/terraforming-mars.git#fdc1cc5ffdff4ef12b00350734dd68e50a61aa2e}"
+    image: terraforming-mars-upstream:local
+    restart: unless-stopped
+    environment:
+      PORT: "8888"
+      HOST: "0.0.0.0"
+      MIN_RESPONSE_INTERVAL_MS: "${MIN_RESPONSE_INTERVAL_MS:-250}"
+    ports:
+      - "${TM_PORT:-8888}:8888"
+    volumes:
+      - tm-db:/usr/src/app/db
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8888/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 60s
+
+  mcp:
+    container_name: terraforming-mars-mcp
+    build:
+      context: .
+      args:
+        NODE_IMAGE: "${NODE_IMAGE:-ssw29qyeeou949jadc.xuanyuan.run/library/node:26-alpine3.23}"
+    image: terraforming-mars-mcp:local
+    restart: unless-stopped
+    environment:
+      TM_SERVER_URL: "http://tm:8888"
+      TM_PUBLIC_URL: "${TM_PUBLIC_URL:-http://localhost:8888}"
+      MCP_HOST: "0.0.0.0"
+      MCP_PORT: "8765"
+      MCP_AUTH_TOKEN: "${MCP_AUTH_TOKEN:-}"
+      MIN_RESPONSE_INTERVAL_MS: "${MIN_RESPONSE_INTERVAL_MS:-250}"
+      TM_REQUEST_TIMEOUT_MS: "${TM_REQUEST_TIMEOUT_MS:-30000}"
+    ports:
+      - "${MCP_PORT:-8765}:8765"
+    depends_on:
+      tm:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8765/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  tm-db:

@@ -53,7 +53,7 @@ NODE_IMAGE=node:26-alpine3.23
 
 ## 让 Bot 连上 MCP
 
-MCP 使用 Streamable HTTP，不是 stdio。任意支持 Streamable HTTP 的 MCP 客户端都可以直接连：
+MCP 使用 Streamable HTTP，不是 stdio。任意支持 Streamable HTTP 的 MCP 客户端都可以直接连。完整的连接握手、18 个工具的参数与返回、官方 `InputResponse` 格式和推荐主循环见 **[docs/MCP.md](docs/MCP.md)**。
 
 ```text
 http://localhost:8765/mcp
